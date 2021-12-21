@@ -42,7 +42,7 @@
     }
 
     loginBtn.onclick = function() {
-        //1.非空验证
+        // 1. 非空验证
         let isCheckNullUserName = checkNullUserName()
         let isCheckNullPassword = checkNullPassword()
         if (!isCheckNullUserName || !isCheckNullPassword) {
@@ -54,9 +54,22 @@
         if (!isCheckPassword) {
             return
         }
+        //3.非空验、密码强度通过，信息存入db.json
+        let user = userNameInput.value
+        let pwd = passwordInput.value
 
-        //3.注册成功
-        alert('注册成功')
+        axios.post({
+            // url: 'http://localhost:3001/data1',
+            url: 'http://localhost:53000/data1',
+            data: {
+                "name": user,
+                "psd": pwd
+            }
+        })
+
+        //4.注册成功
+        alert('注册成功，去登陆')
+        location.href = "../pages/login.html"
     }
 
     //用户名

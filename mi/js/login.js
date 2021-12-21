@@ -28,36 +28,44 @@
                 return true
             }
         }
-        // 密码强度
-    const checkPassword = () => {
-        // 密码必须是大写字母开头,是字母和数字组合，至少8位
-        let reg = /[A-Z][a-zA-Z0-9]{7,}/
-        if (!reg.test(passwordInput.value)) {
-            passwordP.innerHTML = '密码必须是大写字母开头,是字母和数字组合，至少8位'
-            return false
-        } else {
-            passwordP.innerHTML = ''
-            return true
-        }
-    }
+        //     // 密码强度
+        // const checkPassword = () => {
+        //     // 密码必须是大写字母开头,是字母和数字组合，至少8位
+        //     let reg = /[A-Z][a-zA-Z0-9]{7,}/
+        //     if (!reg.test(passwordInput.value)) {
+        //         passwordP.innerHTML = '密码必须是大写字母开头,是字母和数字组合，至少8位'
+        //         return false
+        //     } else {
+        //         passwordP.innerHTML = ''
+        //         return true
+        //     }
+        // }
 
     loginBtn.onclick = function() {
-        //1.非空验证
+        // 1.非空验证
         let isCheckNullUserName = checkNullUserName()
         let isCheckNullPassword = checkNullPassword()
         if (!isCheckNullUserName || !isCheckNullPassword) {
             return
         }
-
-        //2.密码强度
-        let isCheckPassword = checkPassword()
-        if (!isCheckPassword) {
-            return
+        //2.判断账户和密码
+        let user = userNameInput.value
+        let psd = passwordInput.value
+        async function getMes() {
+            // let data = await axios.get({ url: 'http://localhost:3001/data1' })
+            let data = await axios.get({ url: 'http://localhost:53000/data1' })
+            let on = false;
+            data.forEach(mes => {
+                if (mes.name == user && mes.psd == psd) on = true;
+            });
+            if (on) {
+                alert('登录成功')
+                location.href = '../pages/index.html'
+            } else {
+                alert('账户或密码错误')
+            }
         }
-
-        //3.登录成功
-        alert('登录成功')
-        location.href = '../pages/index.html'
+        getMes()
     }
 
     //用户名
@@ -72,5 +80,5 @@
             return
         }
         //密码强度验证
-        checkPassword()
+        // checkPassword()
     }

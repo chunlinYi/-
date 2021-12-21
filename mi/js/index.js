@@ -1,3 +1,22 @@
+/************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /******轮播********/
 let swiperEle = document.querySelector('.swiper')
 let prev = document.querySelector('.left')
@@ -74,7 +93,7 @@ function onNext() {
             setCurrentActive()
             move(swiperEle, {
                 offset: -1226,
-                time: 1000,
+                time: 500,
                 rate: 30
             })
         }
@@ -102,8 +121,8 @@ onNext()
  * 运动函数
  */
 function move(ele, option = {
-    offset: 400,
-    time: 50,
+    offset: 1226,
+    time: 30,
     rate: 30
 }) {
     isMove = true //表示运动开始
