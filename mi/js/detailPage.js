@@ -63,16 +63,37 @@ async function getDetail() {
                 </div>
                 <div class="xiadan ml20 mt20">
                     <input class="jrgwc" type="button" name="jrgwc" value="立即选购" />
-                    <input class="jrgwc" type="button" name="jrgwc" value="加入购物车" onclick="fn()"/>
+                    <input class="jrgwc" type="button" name="jrgwc" value="加入购物车" onclick="addCart(${ele.id},1)"/>
                 </div>
             </div>`
         }
     });
+    //数据渲染
     xq.innerHTML = html
 
 }
 getDetail()
-
-function fn() {
+    //存入localStorage
+function addCart(idd, num) {
+    let cartGoods = localStorage.getItem('cart');
+    // console.log(idd, num);
+    if (cartGoods) { //  有值
+        // 解析数据
+        cartGoods = JSON.parse(cartGoods);
+        //  判断商品是否购买,当前添加的id,是否已经存在于购物车中
+        for (let attr in cartGoods) { // attr 表示商品id
+            // 存在则修改数量
+            attr == idd && (num = num + cartGoods[attr]);
+        }
+        // 存在则修改数量,不存在则添加
+        cartGoods[idd] = num;
+        localStorage.setItem('cart', JSON.stringify(cartGoods))
+    } else { //  没有数据
+        //  以id为key,数量为val
+        cartGoods = {
+            [idd]: num
+        };
+        localStorage.setItem('cart', JSON.stringify(cartGoods))
+    }
     alert("加入成功")
 }

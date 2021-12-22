@@ -1,127 +1,184 @@
-/**
- * 数量加一操作
- */
-function onPlus() {
-    var plusEles = document.querySelectorAll('.plus')
-    for (var i = 0; i < plusEles.length; i++) {
-        plusEles[i].onclick = function() {
-            var amountEle = this.previousElementSibling
-            var num = amountEle.value //获取数量值
-            num++ //加一
-            amountEle.value = num //设置数量给元素节点
-            var priceEle = this.parentElement.previousElementSibling
-            var price = priceEle.innerHTML
-            price = price.substring(0)
-            var totalPrice = price * num //隐式转换
-            var totalPriceEle = this.parentElement.nextElementSibling
-            totalPriceEle.innerHTML = totalPrice.toFixed(2)
-            var minusBtn = this.previousElementSibling.previousElementSibling
-            minusBtn.removeAttribute('disabled')
-            allTotalPrice()
-        }
+//购物车页面
+class ShoppingCart {
+    constructor() {
+        this.tab = document.querySelector('#tab')
+        this.getCartGoods();
+        //绑定点击事件
+        this.doc('.s-con').addEventListener('click', this.clickBubbleFn.bind(this));
     }
-}
-
-/**
- * 数量减一
- */
-function onMinus() {
-    var minusEles = document.querySelectorAll('.minus')
-    for (var i = 0; i < minusEles.length; i++) {
-        minusEles[i].onclick = function() {
-            var amountEle = this.nextElementSibling
-            var num = amountEle.value
-            if (--num < 0) {
-                num = 0
-                this.setAttribute('disabled', true)
-            }
-            amountEle.value = num
-            var priceEle = this.parentElement.previousElementSibling
-            var price = priceEle.innerHTML
-            price = price.substring(0)
-            console.log(price)
-            var totalPrice = price * num
-            var totalPriceEle = this.parentElement.nextElementSibling
-            totalPriceEle.innerHTML = totalPrice.toFixed(2)
-            allTotalPrice()
+    clickBubbleFn(event) {
+            let tar = event.target;
+            // 判断点击的是否为单选框,classList.contains为判断类名是否存在;
+            tar.classList.contains('checkbox-one') && this.oneCheckFn(tar)
+                // 判断数量加
+            tar.classList.contains('add') && this.addClickFn(tar);
+            // 判断数量减
+            tar.classList.contains('minus') && this.delClickFn(tar);
+            // 判断全选
+            tar.classList.contains('checkbox-all') && this.checkAllFn(tar);
+            // 判断是不是删除
+            tar.classList.contains('icon-cha') && this.delAllFn(tar);
+            tar.classList.contains('pay') && this.settlement(tar);
         }
+        // 获取购物车数据
+    async getCartGoods() {
+        //   去除loca里面的数据
+        let cartGoods = localStorage.getItem('cart')
+            // 没有就结束
+        if (!cartGoods) return;
+        // 有的话转换为JS格式
+        cartGoods = JSON.parse(cartGoods);
+        // 获取ajax的数据
+        let data = await axios.get({ url: 'http://localhost:53000/data2' })
+            //    console.log(data);
+            // 循环遍历数据,根据ID取值,有值说明商品在购物车
+        let existData = data.filter(item => {
+            // 结果为数字 转化为 true  undefined 转化为false
+            return cartGoods[item.id]
+        })
+        this.render(existData, cartGoods)
     }
-}
 
-/*****全选*******/
-function checkboxAll() {
-    //1. 获取操作元素节点,全选框和所有复选框
-    var checkboxAllEle = document.querySelector('.checkbox-all')
-    var checkboxItems = document.querySelectorAll('.checkbox-item')
-    checkboxAllEle.onclick = function() {
-        //全选框选中
-        if (checkboxAllEle.checked == true) {
-            //  所有复选框全部选中
-            for (var i = 0; i < checkboxItems.length; i++) {
-                checkboxItems[i].checked = true
+    //渲染购物车
+    render(data, cg) {
+            let shoppingCartList = '';
+            data.forEach(ele => {
+                shoppingCartList += `
+            <tr goods-id="${ele.id}" class="tr-length">
+                        <td>
+                            <input type="checkbox" class="checkbox-one">
+                        </td>
+                        <td><img src="${ele.src}" alt=""></td>
+                        <td>${ele.name} </td>
+                        <td>${ele.price}</td>
+                        <td class="count">
+                            <button class="minus">-</button>
+                            <input value="${cg[ele.id]}">
+                            <button class="add">+</button>
+                        </td>
+                        <td class="singleprice">${ele.price * cg[ele.id]}</td>
+                        <td><i class="del iconfont icon-cha"></i></td>
+            </tr>`
+            })
+            this.tab.innerHTML = shoppingCartList;
+        }
+        // 增加数量
+    addClickFn(target) {
+        //获取数量,他的上一个兄弟节点
+        let num = target.previousElementSibling;
+        num.value = num.value - 0 + 1; //数量
+        //获取小计
+        let minus = target.parentNode.nextElementSibling; //小计
+        // console.log(minus);
+        let price = target.parentNode.previousElementSibling.innerHTML; //单价
+        //  计算出小计的价格
+        minus.innerHTML = parseInt((num.value * price) * 100) / 100
+            // console.log(minus.innerHTML);
+        this.minusToal()
+        this.modl(target.parentNode.parentNode.getAttribute('goods-id'), num.value)
+    }
+
+    //   减少数量
+    delClickFn(target) {
+            //获取数量,他的上一个兄弟节点
+            let num = target.nextElementSibling;
+            num.value = num.value - 0 - 1; //数量
+            //获取小计
+            let minus = target.parentNode.nextElementSibling; //小计
+            let price = target.parentNode.previousElementSibling.innerHTML; //单价
+            //  计算出小计的价格
+            if (num.value <= 1) {
+                num.value = 1;
             }
+            minus.innerHTML = parseInt((num.value * price) * 100) / 100
+            this.minusToal()
+            this.modl(target.parentNode.parentNode.getAttribute('goods-id'), num.value)
+        }
+        // 全选框
+    checkAllFn(target) {
+        let status = target.checked
+        this.docAll('.checkbox-one').forEach(item => {
+            item.checked = status;
+        })
+        this.minusToal()
+    }
+
+    //单选框
+    oneCheckFn(target) {
+            if (!target.checked) {
+                this.doc('.checkbox-all').checked = false;
+            }
+            let count = 0;
+            this.docAll('.checkbox-one').forEach(i => {
+                i.checked && count++;
+            })
+            if (count == this.docAll('.checkbox-one').length) {
+                this.doc('.checkbox-all').checked = true;
+            }
+            this.minusToal()
+        }
+        // 计算价格、数量
+    minusToal() {
+        let num = 0,
+            price = 0;
+        this.docAll('.checkbox-one').forEach(ele => {
+            if (ele.checked) {
+                let trObj = ele.parentNode.parentNode;
+                num += (trObj.querySelector('.count input').value - 0);
+                price += (trObj.querySelector('.singleprice').innerHTML - 0);
+            }
+            this.doc('.buy-number').innerHTML = num;
+            this.doc('.total-money').innerHTML = price;
+        })
+    }
+
+    //删除按钮
+    delAllFn(target) {
+        let that = this
+        layer.open({
+            title: '确认删除框',
+            content: '确定删除',
+            btn: ['取消', '确认'],
+            btn2: function(index, layero) {
+                target.parentNode.parentNode.remove();
+                that.minusToal();
+            }
+        })
+        this.modl(target.parentNode.parentNode.getAttribute('goods-id'))
+    }
+
+    //修改数量
+    modl(id, num = 0) {
+            let cartGoods = localStorage.getItem('cart')
+            if (!cartGoods) return
+            cartGoods = JSON.parse(cartGoods)
+            num == 0 && delete cartGoods[id]
+            num !== 0 && (cartGoods[id] = num)
+            localStorage.setItem('cart', JSON.stringify(cartGoods))
+        }
+        //结算按钮
+    settlement() {
+        if (this.doc('.total-money').innerHTML == 0) {
+            layer.open({
+                content: '您没有选购任何商品',
+                btn: ['确认']
+            })
         } else {
-            //  所有复选框全部选中
-            for (var i = 0; i < checkboxItems.length; i++) {
-                checkboxItems[i].checked = false
-            }
-        }
-    }
-}
-
-function checkboxItem() {
-    //1. 获取操作元素节点,全选框和所有复选框
-    var checkboxAllEle = document.querySelector('.checkbox-all')
-    var checkboxItems = document.querySelectorAll('.checkbox-item')
-
-    for (var i = 0; i < checkboxItems.length; i++) {
-        //给每个复选框绑定事件
-        checkboxItems[i].onclick = function() {
-            var isCheckboxAll = true //默认值true表示全选框选中
-            for (var i = 0; i < checkboxItems.length; i++) {
-                if (checkboxItems[i].checked == false) {
-                    //未选中
-                    isCheckboxAll = false
-                    break
+            layer.open({
+                title: '结算',
+                content: '确认购买',
+                btn: ['取消', '确认'],
+                btn2: function(index, layero) {
+                    location.href = './finall.html'
                 }
-            }
-            //根据isCheckboxAll设置全选框是否选中
-            if (isCheckboxAll == true) {
-                checkboxAllEle.checked = true
-            } else {
-                checkboxAllEle.checked = false
-            }
+            })
         }
     }
-}
-/*****商品数量*******/
-function goodsNum() {
-
-}
-
-
-
-
-/**
- * 计算所有商品总价
- */
-function allTotalPrice() {
-    var singleprices = document.querySelectorAll('.singleprice')
-    var sum = 0
-    for (var i = 0; i < singleprices.length; i++) {
-        var singlePrice = singleprices[i].innerHTML
-        singlePrice = singlePrice.substring(0)
-        singlePrice = Number(singlePrice)
-        sum += singlePrice
+    doc(ele) {
+        return document.querySelector(ele)
     }
-
-    var totalPriceEle = document.querySelector('#totalPrice')
-    totalPriceEle.innerHTML = `￥${sum.toFixed(2)}`
+    docAll(ele) {
+        return document.querySelectorAll(ele)
+    }
 }
-
-
-onPlus()
-onMinus()
-checkboxAll()
-checkboxItem()
-allTotalPrice()
+new ShoppingCart;

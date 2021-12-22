@@ -1,22 +1,3 @@
-/************/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /******轮播********/
 let swiperEle = document.querySelector('.swiper')
 let prev = document.querySelector('.left')

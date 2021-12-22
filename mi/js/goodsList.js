@@ -9,7 +9,7 @@ async function list() {
             <h3 class="item-name">${ele.name}</h3>
             <p class="item-info">${ele.info}</p>
             <p class="item-price">
-                <span class="present-price">${ele.price}</span>
+                <span class="present-price">${ele.price}元</span>
                 <span class="primary-price">${ele.primary}</span>
             </p>
         </li>`
